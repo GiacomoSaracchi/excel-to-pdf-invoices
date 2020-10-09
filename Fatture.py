@@ -2,7 +2,7 @@
 """
 Created on Mon Sep 21 12:09:59 2020
 
-@author: user
+@author: giacomosaracchi
 """
 # Only works on Windows
 
@@ -12,7 +12,8 @@ import win32com.client
 from pywintypes import com_error
 
 class InvoiceGenerator:
-
+    
+    # Initializes class and takes paths of xlsx sheets to draw from as well as pdf export path
     def __init__(self, descriptions_sheet, import_sheet, export_sheet, export_path):
         self.descriptions = xl.load_workbook(descriptions_sheet, read_only=True,
                                              data_only=True).active
@@ -25,7 +26,9 @@ class InvoiceGenerator:
         self.xp_sheet = export_sheet
         self.pdf_path = export_path
         self.orders = []
-        
+    
+    # Gets the order details from import_sheet and puts them in a dictionary
+    # Then adds order to self.orders list
     def get_orders(self):
         today = date.today()
         invoice_num = 1
@@ -55,14 +58,17 @@ class InvoiceGenerator:
                         break
                 self.orders.append(order)
                 invoice_num += 1
-                
+    
+    # Merges the orders that have the same ID, adding some relevant values and cancelling the rest
     def merge_same_id(self):
         for i in reversed(range(len(self.orders))):
             if self.orders[i]["Order ID"] == self.orders[i-1]["Order ID"]:
                 self.orders[i]["Total Price"] += self.orders[i-1]["Unit Price"]
                 self.orders[i]["Items Qty"] += 1
                 self.orders.remove(self.orders[i-1])
-                
+    
+    # Transfers the data from each order in given cells of export_sheet, then exports to export_path.
+    # By saving the document and repeating the operation for the next order, the existing data is overwritten
     def fill_form_and_export(self):
         for order in self.orders:
             # Send order to correct cells in excel output file with default template (do not overwrite)
@@ -83,10 +89,12 @@ class InvoiceGenerator:
             # Checkpoint
             self.form.save(r"C:\Users\t_man\Documents\ThatsArte Fatture XL\Output Form.xlsx")
             # Overwrites the excel file by looping through again
-            
+    
+    # Quits excel. Can be incorporated at the end fill_form_and_export                                           
     def quit_excel(self):
         self.excel.Quit()
-        
+    
+    # Prints out all orders. Mainly used during testing                                                   
     def print_orders(self):
         for order in self.orders:
             print(f"Order Number --- {order[Invoice num]}")
